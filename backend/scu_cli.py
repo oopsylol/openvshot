@@ -15,9 +15,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import requests
-from volcenginesdkarkruntime import Ark
 
 CURRENT_USAGE_ROWS: List[Dict[str, Any]] = []
+APP_VERSION = "0.1.0-beta.1"
 
 
 def now_str() -> str:
@@ -326,6 +326,8 @@ def ensure_client():
         raise RuntimeError("缺少 ARK_API_KEY")
     if not text_model:
         raise RuntimeError("缺少 VOLC_TEXT_MODEL")
+    from volcenginesdkarkruntime import Ark
+
     client = Ark(base_url=base_url, api_key=api_key, region="cn-beijing")
     return client, text_model, image_model, video_model
 
@@ -361,7 +363,7 @@ def resolve_video_backend(config_path: Optional[Path] = None) -> Dict[str, Any]:
     return {"provider": "ark", "client": client, "video_model": video_model}
 
 
-def chat(client: Ark, model: str, prompt: str, temperature: float = 0.4, max_tokens: int = 4096) -> str:
+def chat(client: Any, model: str, prompt: str, temperature: float = 0.4, max_tokens: int = 4096) -> str:
     token_cap = max(256, min(4096, int(max_tokens or 4096)))
     result = client.chat.completions.create(
         model=model,
@@ -1561,6 +1563,8 @@ def cmd_volc_models(args):
     rows: List[Dict[str, Any]] = []
     fetch_method = ""
     errors: List[str] = []
+    from volcenginesdkarkruntime import Ark
+
     client = Ark(base_url=base_url, api_key=api_key, region="cn-beijing")
     models_api = getattr(client, "models", None)
     if models_api and hasattr(models_api, "list"):
@@ -5497,6 +5501,7 @@ def cmd_journal_report(args):
 
 def build_parser():
     parser = argparse.ArgumentParser(prog="vshot")
+    parser.add_argument("--version", action="version", version=f"OpenVshot CLI {APP_VERSION}")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--session", default="")
     parser.add_argument("--session-title", default="短片")

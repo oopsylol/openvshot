@@ -17,4 +17,4 @@ Write-Host "Building OpenVshot desktop installer..."
 
 Write-Host ""
 Write-Host "Build complete:"
-Write-Host "  $desktop\release\OpenVshot Setup 0.1.0-beta.exe"
+Write-Host "  $desktop\release\OpenVshot Setup *.exe"

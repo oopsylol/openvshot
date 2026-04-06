@@ -6,6 +6,9 @@ on:
     branches:
       - main
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 permissions:
   contents: read
 
@@ -45,13 +48,22 @@ jobs:
         shell: pwsh
         run: powershell -ExecutionPolicy Bypass -File .\build_desktop_installer.ps1
 
+      - name: List Windows release files
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          if (Test-Path "apps/desktop/release") {
+            Get-ChildItem -Recurse "apps/desktop/release" | Select-Object FullName, Length
+          } else {
+            Write-Host "apps/desktop/release not found"
+          }
+
       - name: Upload Windows artifacts
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: windows-installer
-          path: |
-            apps/desktop/release/*.exe
-            apps/desktop/release/*.blockmap
+          path: apps/desktop/release/**
           if-no-files-found: error
 
   build-macos:
@@ -116,11 +128,20 @@ jobs:
         shell: bash
         run: bash ./build_desktop_installer_macos.sh
 
+      - name: List macOS release files
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          if [[ -d "apps/desktop/release" ]]; then
+            find "apps/desktop/release" -maxdepth 3 -print
+          else
+            echo "apps/desktop/release not found"
+          fi
+
       - name: Upload macOS artifacts
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: macos-installer
-          path: |
-            apps/desktop/release/*.dmg
-            apps/desktop/release/*.zip
+          path: apps/desktop/release/**
           if-no-files-found: error

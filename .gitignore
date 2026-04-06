@@ -17,6 +17,10 @@ venv/
 # Build outputs
 dist/
 build/
+!apps/desktop/build/
+!apps/desktop/build/icon.ico
+!apps/desktop/build/entitlements.mac.plist
+!apps/desktop/build/entitlements.mac.inherit.plist
 tmp/
 apps/desktop/dist/
 apps/desktop/release/

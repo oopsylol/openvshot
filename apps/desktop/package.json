@@ -11,12 +11,12 @@
     "dev:web": "vite",
     "dev:electron": "wait-on tcp:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .",
     "build": "vite build",
-    "pack": "npm run build && electron-builder --dir",
+    "pack": "npm run build && electron-builder --dir --config electron-builder.config.cjs",
     "build:cli": "powershell -ExecutionPolicy Bypass -File ../../build_openvshot_exe.ps1",
     "build:cli:mac": "bash ../../build_openvshot_macos.sh",
     "build:icon:mac": "bash ../../build_macos_icon.sh",
-    "dist": "npm run build && npm run build:cli && electron-builder",
-    "dist:mac": "npm run build && npm run build:icon:mac && npm run build:cli:mac && electron-builder --mac dmg zip",
+    "dist": "npm run build && npm run build:cli && electron-builder --config electron-builder.config.cjs",
+    "dist:mac": "npm run build && npm run build:icon:mac && npm run build:cli:mac && electron-builder --mac dmg zip --config electron-builder.config.cjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -48,67 +48,5 @@
     "tailwindcss": "^3.4.17",
     "vite": "^8.0.1",
     "wait-on": "^9.0.4"
-  },
-  "build": {
-    "appId": "com.openvshot.desktop",
-    "productName": "OpenVshot",
-    "directories": {
-      "output": "release"
-    },
-    "files": [
-      "dist/**/*",
-      "electron/**/*",
-      "package.json"
-    ],
-    "extraResources": [
-      {
-        "from": "../../backend",
-        "to": "backend"
-      },
-      {
-        "from": "../../dist",
-        "to": "backend",
-        "filter": [
-          "vshot.exe",
-          "vshot"
-        ]
-      },
-      {
-        "from": "../../schema",
-        "to": "schema"
-      },
-      {
-        "from": "../../templates",
-        "to": "templates"
-      }
-    ],
-    "win": {
-      "icon": "build/icon.ico",
-      "target": [
-        "nsis"
-      ]
-    },
-    "mac": {
-      "icon": "build/icon.icns",
-      "target": [
-        "dmg",
-        "zip"
-      ],
-      "category": "public.app-category.video",
-      "hardenedRuntime": true,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.inherit.plist",
-      "notarize": true,
-      "binaries": [
-        "Contents/Resources/backend/vshot"
-      ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "installerIcon": "build/icon.ico",
-      "uninstallerIcon": "build/icon.ico",
-      "installerHeaderIcon": "build/icon.ico"
-    }
   }
 }

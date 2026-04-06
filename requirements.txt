@@ -1,0 +1,4 @@
+﻿streamlit==1.36.0
+requests==2.32.3
+cos-python-sdk-v5==1.9.35
+volcengine-python-sdk[ark]>=4.0.43

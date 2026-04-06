@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Local data
+*.db
+*.sqlite
+*.sqlite3
+.env
+.env.*
+!.mac-signing.env.example
+.mac-signing.env
+
+# Build outputs
+dist/
+build/
+tmp/
+apps/desktop/dist/
+apps/desktop/release/
+apps/desktop/node_modules/
+apps/desktop/build/icon.icns
+*.spec.tmp
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.trae/
+.codex-skill-work/

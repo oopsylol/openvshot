@@ -1,0 +1,108 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ShotList",
+  "type": "object",
+  "required": ["shots"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "properties": {
+        "episode_id": { "type": "string" },
+        "title": { "type": "string" },
+        "series": { "type": "string" },
+        "aspect_ratio": { "type": "string", "default": "9:16" },
+        "fps": { "type": "integer", "minimum": 1 },
+        "output_spec": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "shots": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "episode_id",
+          "scene_id",
+          "shot_id",
+          "duration_sec",
+          "visual_prompt",
+          "negative_prompt",
+          "character_refs",
+          "camera_style",
+          "lighting_style",
+          "seed",
+          "output_path",
+          "voice_line",
+          "subtitle_line",
+          "status"
+        ],
+        "properties": {
+          "episode_id": { "type": "string" },
+          "scene_id": { "type": "string" },
+          "shot_id": { "type": "string" },
+          "duration_sec": { "type": "number", "minimum": 0.5 },
+          "visual_prompt": { "type": "string", "minLength": 1 },
+          "negative_prompt": { "type": "string" },
+          "character_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["id", "name"],
+              "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "ref_image_path": { "type": "string" },
+                "ref_prompt": { "type": "string" },
+                "weight": { "type": "number", "minimum": 0, "maximum": 1 }
+              },
+              "additionalProperties": true
+            }
+          },
+          "camera_style": { "type": "string" },
+          "lighting_style": { "type": "string" },
+          "seed": { "type": "integer" },
+          "output_path": { "type": "string" },
+          "audio_path": { "type": "string" },
+          "voice_line": { "type": "string" },
+          "subtitle_line": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["todo", "queued", "rendering", "done", "failed", "retry"]
+          },
+          "provider": { "type": "string" },
+          "model": { "type": "string" },
+          "params": { "type": "object" },
+          "notes": { "type": "string" },
+          "action_desc": { "type": "string" },
+          "version": { "type": "integer", "minimum": 1 },
+          "retry_count": { "type": "integer", "minimum": 0 },
+          "last_error": { "type": "string" },
+          "qa_score": { "type": "number", "minimum": 0, "maximum": 100 },
+          "qa_notes": { "type": "string" },
+          "previs_notes": { "type": "string" },
+          "cost_yuan": { "type": "number", "minimum": 0 },
+          "storyboard_7d": {
+            "type": "object",
+            "properties": {
+              "logic_time": { "type": "string" },
+              "av_visual": { "type": "string" },
+              "av_audio": { "type": "string" },
+              "camera": { "type": "string" },
+              "acting": { "type": "string" },
+              "action": { "type": "string" },
+              "vibe": { "type": "string" },
+              "sting": { "type": "string" }
+            },
+            "additionalProperties": true
+          },
+          "gate_status": { "type": "object" }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

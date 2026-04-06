@@ -7,6 +7,7 @@ ARCH_NAME="${OPENVSHOT_CLI_ARCH:-$(uname -m)}"
 BIN_PATH="$ROOT_DIR/dist/vshot"
 BUNDLE_DIR="$OUTPUT_ROOT/cli-macos-$ARCH_NAME"
 ARCHIVE_PATH="$OUTPUT_ROOT/openvshot-cli-macos-$ARCH_NAME.tar.gz"
+STANDALONE_BIN_PATH="$OUTPUT_ROOT/openvshot-cli-macos-$ARCH_NAME"
 
 if [[ ! -x "$BIN_PATH" ]]; then
   bash "$ROOT_DIR/build_openvshot_macos.sh"
@@ -17,6 +18,8 @@ mkdir -p "$BUNDLE_DIR"
 
 cp "$BIN_PATH" "$BUNDLE_DIR/vshot"
 chmod +x "$BUNDLE_DIR/vshot"
+cp "$BIN_PATH" "$STANDALONE_BIN_PATH"
+chmod +x "$STANDALONE_BIN_PATH"
 
 cat > "$BUNDLE_DIR/README.txt" <<'EOF'
 OpenVshot CLI (macOS)
@@ -32,3 +35,4 @@ tar -czf "$ARCHIVE_PATH" -C "$BUNDLE_DIR" .
 echo
 echo "CLI bundle created:"
 echo "  $ARCHIVE_PATH"
+echo "  $STANDALONE_BIN_PATH"

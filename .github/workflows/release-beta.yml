@@ -57,9 +57,10 @@ jobs:
         with:
           name: beta-windows
           path: |
-            apps/desktop/release/**
+            apps/desktop/release/*.exe
+            apps/desktop/release/*.blockmap
+            release/openvshot-cli-windows-x64.exe
             release/openvshot-cli-windows-x64.zip
-            dist/vshot.exe
           if-no-files-found: error
 
   release-macos:
@@ -132,9 +133,10 @@ jobs:
         with:
           name: beta-macos
           path: |
-            apps/desktop/release/**
+            apps/desktop/release/*.dmg
+            apps/desktop/release/*.zip
+            release/openvshot-cli-macos-*
             release/openvshot-cli-macos-*.tar.gz
-            dist/vshot
           if-no-files-found: error
 
   publish-beta:
@@ -165,7 +167,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          mapfile -t ASSETS < <(find release-assets -type f | sort)
+          mapfile -t ASSETS < <(
+            find release-assets -type f \( \
+              -name "*.exe" -o \
+              -name "*.dmg" -o \
+              -name "*.zip" -o \
+              -name "*.tar.gz" -o \
+              -name "openvshot-cli-macos-arm64" -o \
+              -name "openvshot-cli-macos-x86_64" -o \
+              -name "openvshot-cli-macos-universal" \
+            \) | sort
+          )
           if [[ ${#ASSETS[@]} -eq 0 ]]; then
             echo "No release assets found."
             exit 1

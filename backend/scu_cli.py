@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional
 import requests
 
 CURRENT_USAGE_ROWS: List[Dict[str, Any]] = []
-APP_VERSION = "0.1.0-beta.2"
+APP_VERSION = "0.1.0-beta.3"
 
 
 def now_str() -> str:

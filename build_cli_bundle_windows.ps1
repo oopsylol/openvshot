@@ -17,6 +17,7 @@ if (-not (Test-Path $exePath)) {
 
 $bundleDir = Join-Path $OutputRoot "cli-windows"
 $archivePath = Join-Path $OutputRoot "openvshot-cli-windows-x64.zip"
+$standaloneExePath = Join-Path $OutputRoot "openvshot-cli-windows-x64.exe"
 
 if (Test-Path $bundleDir) {
   Remove-Item -Recurse -Force $bundleDir
@@ -24,6 +25,7 @@ if (Test-Path $bundleDir) {
 New-Item -ItemType Directory -Path $bundleDir -Force | Out-Null
 
 Copy-Item $exePath (Join-Path $bundleDir "vshot.exe") -Force
+Copy-Item $exePath $standaloneExePath -Force
 Copy-Item (Join-Path $root "install_vshot.ps1") (Join-Path $bundleDir "install_vshot.ps1") -Force
 Copy-Item (Join-Path $root "vshot.bat") (Join-Path $bundleDir "vshot.bat") -Force
 Copy-Item (Join-Path $root "vshot.ps1") (Join-Path $bundleDir "vshot.ps1") -Force
@@ -45,3 +47,4 @@ Compress-Archive -Path (Join-Path $bundleDir "*") -DestinationPath $archivePath 
 Write-Host ""
 Write-Host "CLI bundle created:"
 Write-Host "  $archivePath"
+Write-Host "  $standaloneExePath"

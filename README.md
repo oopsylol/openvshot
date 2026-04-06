@@ -36,6 +36,7 @@
   - 打包后的目标 Mac 不需要额外安装 Python
   - 如需临时调试脚本回退，可设置环境变量 `OPENVSHOT_ALLOW_SCRIPT_FALLBACK=1`
   - 可用 `OPENVSHOT_MAC_ARCH=arm64|x64|universal` 指定架构
+  - 当前 CI 默认生成与 runner 同架构的 mac 安装包；`universal` 需要后端二进制也做双架构合并后再启用
 
 ## GitHub Actions
 - 已新增工作流：

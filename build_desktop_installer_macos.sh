@@ -40,14 +40,29 @@ if ! xcode-select -p >/dev/null 2>&1; then
   exit 1
 fi
 
+HAS_SIGNING_IDENTITY=0
+if [[ -n "${CSC_NAME:-}" || -n "${CSC_LINK:-}" || -n "${BUILD_CERTIFICATE_BASE64:-}" ]]; then
+  HAS_SIGNING_IDENTITY=1
+fi
+
+HAS_NOTARIZATION_CREDENTIALS=0
 if [[ -n "${APPLE_API_KEY:-}" && -n "${APPLE_API_KEY_ID:-}" && -n "${APPLE_API_ISSUER:-}" ]]; then
+  HAS_NOTARIZATION_CREDENTIALS=1
   echo "Notarization mode: App Store Connect API key"
 elif [[ -n "${APPLE_ID:-}" && -n "${APPLE_APP_SPECIFIC_PASSWORD:-}" && -n "${APPLE_TEAM_ID:-}" ]]; then
+  HAS_NOTARIZATION_CREDENTIALS=1
   echo "Notarization mode: Apple ID + app-specific password"
 elif [[ -n "${APPLE_KEYCHAIN_PROFILE:-}" && -n "${APPLE_KEYCHAIN:-}" ]]; then
+  HAS_NOTARIZATION_CREDENTIALS=1
   echo "Notarization mode: notarytool keychain profile"
 else
   echo "Notarization credentials not found. Build will continue, but signed distribution may be incomplete."
+fi
+
+if [[ "$HAS_SIGNING_IDENTITY" -eq 1 ]]; then
+  echo "Signing mode: enabled"
+else
+  echo "Signing mode: unsigned build"
 fi
 
 if [[ "${OPENVSHOT_SKIP_DEP_INSTALL:-0}" != "1" ]]; then
@@ -94,15 +109,23 @@ DMG_FILE="$(find "$DESKTOP_DIR/release" -type f -name "*.dmg" | head -n 1 || tru
 
 if [[ -n "$APP_BUNDLE" ]]; then
   echo
-  echo "Verifying app signature:"
-  codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
-  spctl -a -vvv "$APP_BUNDLE" || true
+  if [[ "$HAS_SIGNING_IDENTITY" -eq 1 ]]; then
+    echo "Verifying app signature:"
+    codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
+    spctl -a -vvv "$APP_BUNDLE" || true
+  else
+    echo "Skipping signature verification for unsigned build."
+  fi
 fi
 
 if [[ -n "$DMG_FILE" ]] && command -v xcrun >/dev/null 2>&1; then
   echo
-  echo "Checking notarization ticket:"
-  xcrun stapler validate "$DMG_FILE" || true
+  if [[ "$HAS_SIGNING_IDENTITY" -eq 1 && "$HAS_NOTARIZATION_CREDENTIALS" -eq 1 ]]; then
+    echo "Checking notarization ticket:"
+    xcrun stapler validate "$DMG_FILE" || true
+  else
+    echo "Skipping notarization ticket validation."
+  fi
 fi
 
 echo

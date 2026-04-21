@@ -3,7 +3,30 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUTPUT_ROOT="${OUTPUT_ROOT:-$ROOT_DIR/release}"
-ARCH_NAME="${OPENVSHOT_CLI_ARCH:-$(uname -m)}"
+
+# Function summary:
+# Normalizes architecture aliases so archive names match the produced CLI binary.
+normalize_arch() {
+  case "${1:-}" in
+    x64 | x86_64 | amd64)
+      printf 'x64\n'
+      ;;
+    arm64 | aarch64)
+      printf 'arm64\n'
+      ;;
+    universal | universal2)
+      printf 'universal\n'
+      ;;
+    "")
+      printf '%s\n' "$(normalize_arch "$(uname -m)")"
+      ;;
+    *)
+      printf '%s\n' "$1"
+      ;;
+  esac
+}
+
+ARCH_NAME="$(normalize_arch "${OPENVSHOT_CLI_ARCH:-${OPENVSHOT_MAC_ARCH:-$(uname -m)}}")"
 BIN_PATH="$ROOT_DIR/dist/vshot"
 BUNDLE_DIR="$OUTPUT_ROOT/cli-macos-$ARCH_NAME"
 ARCHIVE_PATH="$OUTPUT_ROOT/openvshot-cli-macos-$ARCH_NAME.tar.gz"

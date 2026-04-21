@@ -1,3 +1,6 @@
+// File summary:
+// Electron Builder configuration for OpenVshot desktop packaging.
+
 const hasAppStoreConnectKey =
   Boolean(process.env.APPLE_API_KEY) &&
   Boolean(process.env.APPLE_API_KEY_ID) &&
@@ -22,6 +25,7 @@ const shouldNotarizeMac = shouldSignMac && (hasAppStoreConnectKey || hasAppleIdC
 const config = {
   appId: "com.openvshot.desktop",
   productName: "OpenVshot",
+  artifactName: "${productName}-${version}-${arch}.${ext}",
   directories: {
     output: "release",
   },
@@ -53,6 +57,7 @@ const config = {
     icon: "build/icon.icns",
     target: ["dmg", "zip"],
     category: "public.app-category.video",
+    minimumSystemVersion: "11.0",
     hardenedRuntime: shouldSignMac,
     entitlements: "build/entitlements.mac.plist",
     entitlementsInherit: "build/entitlements.mac.inherit.plist",

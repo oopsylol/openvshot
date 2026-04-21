@@ -1,3 +1,6 @@
+// File summary:
+// Electron main process for OpenVshot desktop and CLI process orchestration.
+
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 const { spawn } = require("node:child_process");
 const fs = require("node:fs");
@@ -15,6 +18,24 @@ function packagedBinaryNames() {
     return ["vshot.exe"];
   }
   return ["vshot"];
+}
+
+/**
+ * Function summary:
+ * Resolves a locally built CLI binary during development so the app does not
+ * depend on the host Python environment when a packaged binary already exists.
+ */
+function resolveDevelopmentBinary() {
+  const candidates = [
+    path.resolve(__dirname, "../../../dist/vshot"),
+    path.resolve(__dirname, "../../../dist/vshot.exe"),
+  ];
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return "";
 }
 
 function resolveCliTarget() {
@@ -39,6 +60,13 @@ function resolveCliTarget() {
     throw new Error(
       `Packaged CLI binary is missing: ${path.join(process.resourcesPath, "backend", expectedName)}`
     );
+  }
+  const developmentBinary = resolveDevelopmentBinary();
+  if (developmentBinary) {
+    return {
+      command: developmentBinary,
+      bootstrapArgs: [],
+    };
   }
   return {
     command: process.env.OPENVSHOT_PYTHON || defaultPythonCommand(),

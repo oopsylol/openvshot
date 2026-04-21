@@ -1,10 +1,45 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# File summary:
+# Builds the macOS desktop installer and keeps the bundled CLI architecture aligned.
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DESKTOP_DIR="$ROOT_DIR/apps/desktop"
 ENV_FILE="${OPENVSHOT_MAC_ENV_FILE:-$ROOT_DIR/.mac-signing.env}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
+
+# Function summary:
+# Verifies that a required command exists before the build continues.
+require_command() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "Missing command: $1"
+    exit 1
+  fi
+}
+
+# Function summary:
+# Normalizes architecture aliases so Electron Builder and the CLI builder use the same values.
+normalize_arch() {
+  case "${1:-}" in
+    "")
+      printf '%s\n' "$(normalize_arch "$(uname -m)")"
+      ;;
+    x64 | x86_64 | amd64)
+      printf 'x64\n'
+      ;;
+    arm64 | aarch64)
+      printf 'arm64\n'
+      ;;
+    universal | universal2)
+      printf 'universal\n'
+      ;;
+    *)
+      echo "Unsupported OPENVSHOT_MAC_ARCH: ${1:-}"
+      exit 1
+      ;;
+  esac
+}
 
 if [[ "${OSTYPE:-}" != darwin* ]]; then
   echo "This script must run on macOS."
@@ -18,13 +53,6 @@ if [[ -f "$ENV_FILE" ]]; then
   source "$ENV_FILE"
   set +a
 fi
-
-require_command() {
-  if ! command -v "$1" >/dev/null 2>&1; then
-    echo "Missing command: $1"
-    exit 1
-  fi
-}
 
 require_command "$PYTHON_BIN"
 require_command npm
@@ -65,8 +93,11 @@ else
   echo "Signing mode: unsigned build"
 fi
 
+OPENVSHOT_MAC_ARCH="$(normalize_arch "${OPENVSHOT_MAC_ARCH:-}")"
+export OPENVSHOT_MAC_ARCH
+echo "Target macOS architecture: $OPENVSHOT_MAC_ARCH"
+
 if [[ "${OPENVSHOT_SKIP_DEP_INSTALL:-0}" != "1" ]]; then
-  "$PYTHON_BIN" -m pip install -r "$ROOT_DIR/requirements.txt"
   (
     cd "$DESKTOP_DIR"
     npm install
@@ -74,9 +105,7 @@ if [[ "${OPENVSHOT_SKIP_DEP_INSTALL:-0}" != "1" ]]; then
 fi
 
 BUILD_ARGS=()
-case "${OPENVSHOT_MAC_ARCH:-}" in
-  "")
-    ;;
+case "${OPENVSHOT_MAC_ARCH}" in
   x64)
     BUILD_ARGS+=(--x64)
     ;;
@@ -85,10 +114,6 @@ case "${OPENVSHOT_MAC_ARCH:-}" in
     ;;
   universal)
     BUILD_ARGS+=(--universal)
-    ;;
-  *)
-    echo "Unsupported OPENVSHOT_MAC_ARCH: ${OPENVSHOT_MAC_ARCH}"
-    exit 1
     ;;
 esac
 

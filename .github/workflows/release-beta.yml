@@ -1,9 +1,9 @@
-name: Release Beta
+name: Release
 
 on:
   push:
     tags:
-      - "v*beta*"
+      - "v*"
   workflow_dispatch:
 
 env:
@@ -139,8 +139,8 @@ jobs:
             release/openvshot-cli-macos-*.tar.gz
           if-no-files-found: error
 
-  publish-beta:
-    name: Publish Beta Release
+  publish-release:
+    name: Publish GitHub Release
     needs:
       - release-windows
       - release-macos
@@ -162,11 +162,16 @@ jobs:
           name: beta-macos
           path: release-assets/macos
 
-      - name: Publish GitHub prerelease
+      - name: Publish GitHub release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          if [[ "${GITHUB_REF_NAME}" == *beta* ]]; then
+            RELEASE_FLAG="--prerelease"
+          else
+            RELEASE_FLAG=""
+          fi
           mapfile -t ASSETS < <(
             find release-assets -type f \( \
               -name "*.exe" -o \
@@ -191,5 +196,5 @@ jobs:
               --repo "${GITHUB_REPOSITORY}" \
               --title "OpenVshot ${GITHUB_REF_NAME}" \
               --generate-notes \
-              --prerelease
+              ${RELEASE_FLAG}
           fi

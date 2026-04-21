@@ -8,6 +8,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
 TMP_DIR="$ROOT_DIR/.build/openvshot-macos"
 DEFAULT_PYTHON_BIN="${PYTHON_BIN:-python3}"
+LAST_BUILT_BINARY_PATH=""
 
 # Function summary:
 # Prints a timestamped log line for build diagnostics.
@@ -105,7 +106,7 @@ assert_python_usable() {
 }
 
 # Function summary:
-# Builds one CLI binary for a single macOS architecture and returns the output path.
+# Builds one CLI binary for a single macOS architecture and stores the output path.
 build_single_arch() {
   local target_arch="$1"
   local python_bin
@@ -137,7 +138,7 @@ build_single_arch() {
     "$ROOT_DIR/scu_cli.py"
 
   [[ -x "$binary_path" ]] || fail "CLI binary was not created for $target_arch: $binary_path"
-  printf '%s\n' "$binary_path"
+  LAST_BUILT_BINARY_PATH="$binary_path"
 }
 
 HOST_ARCH="$(normalize_arch "$(uname -m)")"
@@ -152,15 +153,18 @@ mkdir -p "$DIST_DIR"
 
 if [[ "$TARGET_ARCH" == "universal" ]]; then
   require_command lipo
-  x64_binary="$(build_single_arch x64)"
-  arm64_binary="$(build_single_arch arm64)"
+  build_single_arch x64
+  x64_binary="$LAST_BUILT_BINARY_PATH"
+  build_single_arch arm64
+  arm64_binary="$LAST_BUILT_BINARY_PATH"
 
   log "Merging x64 and arm64 binaries into a universal build"
   lipo -create -output "$DIST_DIR/vshot" "$x64_binary" "$arm64_binary"
   chmod +x "$DIST_DIR/vshot"
   lipo -info "$DIST_DIR/vshot"
 else
-  single_binary="$(build_single_arch "$TARGET_ARCH")"
+  build_single_arch "$TARGET_ARCH"
+  single_binary="$LAST_BUILT_BINARY_PATH"
   cp "$single_binary" "$DIST_DIR/vshot"
   chmod +x "$DIST_DIR/vshot"
   file "$DIST_DIR/vshot"

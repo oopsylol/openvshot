@@ -179,6 +179,7 @@ jobs:
               -name "*.zip" -o \
               -name "*.tar.gz" -o \
               -name "openvshot-cli-macos-arm64" -o \
+              -name "openvshot-cli-macos-x64" -o \
               -name "openvshot-cli-macos-x86_64" -o \
               -name "openvshot-cli-macos-universal" \
             \) | sort

@@ -8,13 +8,20 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DESKTOP_DIR="$ROOT_DIR/apps/desktop"
 ENV_FILE="${OPENVSHOT_MAC_ENV_FILE:-$ROOT_DIR/.mac-signing.env}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
+REQUIRE_SIGNED_RELEASE="${OPENVSHOT_REQUIRE_SIGNED_RELEASE:-0}"
+
+# Function summary:
+# Prints an error and exits immediately.
+fail() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
 
 # Function summary:
 # Verifies that a required command exists before the build continues.
 require_command() {
   if ! command -v "$1" >/dev/null 2>&1; then
-    echo "Missing command: $1"
-    exit 1
+    fail "Missing command: $1"
   fi
 }
 
@@ -35,15 +42,13 @@ normalize_arch() {
       printf 'universal\n'
       ;;
     *)
-      echo "Unsupported OPENVSHOT_MAC_ARCH: ${1:-}"
-      exit 1
+      fail "Unsupported OPENVSHOT_MAC_ARCH: ${1:-}"
       ;;
   esac
 }
 
 if [[ "${OSTYPE:-}" != darwin* ]]; then
-  echo "This script must run on macOS."
-  exit 1
+  fail "This script must run on macOS."
 fi
 
 if [[ -f "$ENV_FILE" ]]; then
@@ -64,8 +69,7 @@ require_command codesign
 require_command spctl
 
 if ! xcode-select -p >/dev/null 2>&1; then
-  echo "Xcode Command Line Tools are required."
-  exit 1
+  fail "Xcode Command Line Tools are required."
 fi
 
 HAS_SIGNING_IDENTITY=0
@@ -91,6 +95,15 @@ if [[ "$HAS_SIGNING_IDENTITY" -eq 1 ]]; then
   echo "Signing mode: enabled"
 else
   echo "Signing mode: unsigned build"
+fi
+
+if [[ "$REQUIRE_SIGNED_RELEASE" == "1" ]]; then
+  if [[ "$HAS_SIGNING_IDENTITY" -ne 1 ]]; then
+    fail "Formal macOS distribution requires a signing identity. Configure CSC_NAME or BUILD_CERTIFICATE_BASE64."
+  fi
+  if [[ "$HAS_NOTARIZATION_CREDENTIALS" -ne 1 ]]; then
+    fail "Formal macOS distribution requires notarization credentials."
+  fi
 fi
 
 OPENVSHOT_MAC_ARCH="$(normalize_arch "${OPENVSHOT_MAC_ARCH:-}")"
@@ -137,20 +150,32 @@ if [[ -n "$APP_BUNDLE" ]]; then
   if [[ "$HAS_SIGNING_IDENTITY" -eq 1 ]]; then
     echo "Verifying app signature:"
     codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
-    spctl -a -vvv "$APP_BUNDLE" || true
+    if [[ "$REQUIRE_SIGNED_RELEASE" == "1" ]]; then
+      spctl -a -vvv "$APP_BUNDLE"
+    else
+      spctl -a -vvv "$APP_BUNDLE" || true
+    fi
   else
     echo "Skipping signature verification for unsigned build."
   fi
+elif [[ "$REQUIRE_SIGNED_RELEASE" == "1" ]]; then
+  fail "OpenVshot.app was not generated."
 fi
 
 if [[ -n "$DMG_FILE" ]] && command -v xcrun >/dev/null 2>&1; then
   echo
   if [[ "$HAS_SIGNING_IDENTITY" -eq 1 && "$HAS_NOTARIZATION_CREDENTIALS" -eq 1 ]]; then
     echo "Checking notarization ticket:"
-    xcrun stapler validate "$DMG_FILE" || true
+    if [[ "$REQUIRE_SIGNED_RELEASE" == "1" ]]; then
+      xcrun stapler validate "$DMG_FILE"
+    else
+      xcrun stapler validate "$DMG_FILE" || true
+    fi
   else
     echo "Skipping notarization ticket validation."
   fi
+elif [[ "$REQUIRE_SIGNED_RELEASE" == "1" ]]; then
+  fail "Signed DMG artifact was not generated."
 fi
 
 echo

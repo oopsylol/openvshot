@@ -67,7 +67,9 @@ jobs:
     name: Release macOS
     runs-on: macos-latest
     env:
+      OPENVSHOT_REQUIRE_SIGNED_RELEASE: "1"
       CSC_NAME: ${{ secrets.CSC_NAME }}
+      CSC_LINK: ${{ secrets.CSC_LINK }}
       BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
       P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
       KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
@@ -77,6 +79,8 @@ jobs:
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_KEYCHAIN_PROFILE: ${{ secrets.APPLE_KEYCHAIN_PROFILE }}
+      APPLE_KEYCHAIN: ${{ secrets.APPLE_KEYCHAIN }}
 
     steps:
       - name: Checkout
@@ -93,6 +97,34 @@ jobs:
           node-version: "20"
           cache: npm
           cache-dependency-path: apps/desktop/package-lock.json
+
+      - name: Validate macOS signing inputs
+        shell: bash
+        run: |
+          HAS_SIGNING=0
+          HAS_NOTARIZATION=0
+
+          if [[ -n "${CSC_NAME:-}" || -n "${CSC_LINK:-}" || -n "${BUILD_CERTIFICATE_BASE64:-}" ]]; then
+            HAS_SIGNING=1
+          fi
+
+          if [[ -n "${APPLE_API_KEY:-}" && -n "${APPLE_API_KEY_ID:-}" && -n "${APPLE_API_ISSUER:-}" ]]; then
+            HAS_NOTARIZATION=1
+          elif [[ -n "${APPLE_ID:-}" && -n "${APPLE_APP_SPECIFIC_PASSWORD:-}" && -n "${APPLE_TEAM_ID:-}" ]]; then
+            HAS_NOTARIZATION=1
+          elif [[ -n "${APPLE_KEYCHAIN_PROFILE:-}" && -n "${APPLE_KEYCHAIN:-}" ]]; then
+            HAS_NOTARIZATION=1
+          fi
+
+          if [[ "$HAS_SIGNING" -ne 1 ]]; then
+            echo "Missing macOS signing credentials. Configure CSC_NAME or BUILD_CERTIFICATE_BASE64/CSC_LINK secrets."
+            exit 1
+          fi
+
+          if [[ "$HAS_NOTARIZATION" -ne 1 ]]; then
+            echo "Missing macOS notarization credentials. Configure App Store Connect API key, Apple ID, or notarytool profile secrets."
+            exit 1
+          fi
 
       - name: Prepare App Store Connect API key
         if: ${{ env.APPLE_API_KEY != '' }}

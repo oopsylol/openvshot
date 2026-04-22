@@ -9,6 +9,7 @@ DESKTOP_DIR="$ROOT_DIR/apps/desktop"
 ENV_FILE="${OPENVSHOT_MAC_ENV_FILE:-$ROOT_DIR/.mac-signing.env}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 REQUIRE_SIGNED_RELEASE="${OPENVSHOT_REQUIRE_SIGNED_RELEASE:-0}"
+DIRECT_DISTRIBUTION="${OPENVSHOT_MAC_DIRECT_DISTRIBUTION:-0}"
 
 # Function summary:
 # Prints an error and exits immediately.
@@ -97,6 +98,12 @@ else
   echo "Signing mode: unsigned build"
 fi
 
+if [[ "$DIRECT_DISTRIBUTION" == "1" ]]; then
+  echo "Distribution mode: direct open-source release"
+else
+  echo "Distribution mode: Apple signed release"
+fi
+
 if [[ "$REQUIRE_SIGNED_RELEASE" == "1" ]]; then
   if [[ "$HAS_SIGNING_IDENTITY" -ne 1 ]]; then
     fail "Formal macOS distribution requires a signing identity. Configure CSC_NAME or BUILD_CERTIFICATE_BASE64."
@@ -144,6 +151,7 @@ fi
 
 APP_BUNDLE="$(find "$DESKTOP_DIR/release" -type d -name "OpenVshot.app" | head -n 1 || true)"
 DMG_FILE="$(find "$DESKTOP_DIR/release" -type f -name "*.dmg" | head -n 1 || true)"
+ZIP_FILE="$(find "$DESKTOP_DIR/release" -type f -name "*.zip" | head -n 1 || true)"
 
 if [[ -n "$APP_BUNDLE" ]]; then
   echo
@@ -162,7 +170,14 @@ elif [[ "$REQUIRE_SIGNED_RELEASE" == "1" ]]; then
   fail "OpenVshot.app was not generated."
 fi
 
-if [[ -n "$DMG_FILE" ]] && command -v xcrun >/dev/null 2>&1; then
+if [[ "$DIRECT_DISTRIBUTION" == "1" ]]; then
+  if [[ -z "$ZIP_FILE" ]]; then
+    fail "Direct macOS distribution requires a ZIP artifact."
+  fi
+  echo
+  echo "Direct distribution ZIP:"
+  echo "  $ZIP_FILE"
+elif [[ -n "$DMG_FILE" ]] && command -v xcrun >/dev/null 2>&1; then
   echo
   if [[ "$HAS_SIGNING_IDENTITY" -eq 1 && "$HAS_NOTARIZATION_CREDENTIALS" -eq 1 ]]; then
     echo "Checking notarization ticket:"

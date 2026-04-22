@@ -1,6 +1,8 @@
 // File summary:
 // Electron Builder configuration for OpenVshot desktop packaging.
 
+const isDirectMacDistribution = process.env.OPENVSHOT_MAC_DIRECT_DISTRIBUTION === "1";
+
 const hasAppStoreConnectKey =
   Boolean(process.env.APPLE_API_KEY) &&
   Boolean(process.env.APPLE_API_KEY_ID) &&
@@ -16,7 +18,8 @@ const hasNotarytoolProfile =
   Boolean(process.env.APPLE_KEYCHAIN);
 
 const shouldSignMac = Boolean(
-  process.env.CSC_NAME || process.env.CSC_LINK || process.env.BUILD_CERTIFICATE_BASE64
+  !isDirectMacDistribution &&
+    (process.env.CSC_NAME || process.env.CSC_LINK || process.env.BUILD_CERTIFICATE_BASE64)
 );
 
 const shouldNotarizeMac = shouldSignMac && (hasAppStoreConnectKey || hasAppleIdCredentials || hasNotarytoolProfile);
@@ -55,7 +58,7 @@ const config = {
   },
   mac: {
     icon: "build/icon.icns",
-    target: ["dmg", "zip"],
+    target: isDirectMacDistribution ? ["zip"] : ["dmg", "zip"],
     category: "public.app-category.video",
     minimumSystemVersion: "11.0",
     hardenedRuntime: shouldSignMac,

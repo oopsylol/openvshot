@@ -40,6 +40,108 @@
 - `APPLE_KEYCHAIN_PROFILE`
 - `APPLE_KEYCHAIN`
 
+## 自动化导入
+
+项目已提供自动化脚本：
+
+- [prepare_github_macos_secrets.sh](file:///d:/wwwroot/video-creater/prepare_github_macos_secrets.sh)
+- [setup_macos_formal_distribution.ps1](file:///d:/wwwroot/video-creater/setup_macos_formal_distribution.ps1)
+
+如果你的日常开发机是 Windows，优先使用 PowerShell 脚本完成自动化。
+
+## Windows 最短流程
+
+### 1. 生成 CSR 和私钥
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\setup_macos_formal_distribution.ps1 `
+  -CreateCsr `
+  -OutputDirectory .\macos-distribution `
+  -CommonName "OpenVshot Developer ID" `
+  -Organization "OpenVshot" `
+  -OrganizationalUnit "Engineering"
+```
+
+执行完成后会生成：
+
+1. `macos-distribution\developer_id_private.key`
+2. `macos-distribution\developer_id_request.csr`
+
+将 `developer_id_request.csr` 上传到 Apple Developer 后台申请 `Developer ID Application` 证书。
+
+### 2. 下载证书后生成 P12
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\setup_macos_formal_distribution.ps1 `
+  -CreateP12 `
+  -PrivateKeyPath .\macos-distribution\developer_id_private.key `
+  -CertificatePath .\Downloads\developerID_application.cer `
+  -OutputDirectory .\macos-distribution
+```
+
+脚本会提示输入 `P12` 密码，并输出 `openvshot-developer-id.p12`。
+
+### 3. 一键导入 GitHub Secrets
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\setup_macos_formal_distribution.ps1 `
+  -ImportSecrets `
+  -Repo oopsylol/openvshot `
+  -CertificateName "Developer ID Application: Your Company (TEAMID1234)" `
+  -P12Path .\macos-distribution\openvshot-developer-id.p12 `
+  -ApiKeyFile .\Downloads\AuthKey_ABC123XYZ.p8 `
+  -ApiKeyId ABC123XYZ `
+  -ApiIssuer 00000000-0000-0000-0000-000000000000 `
+  -Apply
+```
+
+执行后会自动写入这些 Secrets：
+
+1. `CSC_NAME`
+2. `BUILD_CERTIFICATE_BASE64`
+3. `P12_PASSWORD`
+4. `KEYCHAIN_PASSWORD`
+5. `APPLE_API_KEY`
+6. `APPLE_API_KEY_ID`
+7. `APPLE_API_ISSUER`
+
+在你的 Mac 上准备好以下文件后即可运行：
+
+1. 已导出的 `Developer ID Application` 证书 `.p12`
+2. `App Store Connect API Key` 的 `.p8` 文件
+3. `Key ID`
+4. `Issuer ID`
+
+示例命令：
+
+```bash
+bash ./prepare_github_macos_secrets.sh \
+  --repo oopsylol/openvshot \
+  --p12 ~/Desktop/openvshot-dev-id.p12 \
+  --api-key-file ~/Downloads/AuthKey_ABC123XYZ.p8 \
+  --api-key-id ABC123XYZ \
+  --api-issuer 00000000-0000-0000-0000-000000000000 \
+  --apply
+```
+
+脚本会自动完成以下动作：
+
+1. 检测本机 `Developer ID Application` 证书名称
+2. 将 `.p12` 转为 `BUILD_CERTIFICATE_BASE64`
+3. 读取 `.p8` 文件内容作为 `APPLE_API_KEY`
+4. 自动生成 `KEYCHAIN_PASSWORD`
+5. 通过 `gh secret set` 写入 GitHub Actions secrets
+
+如果不加 `--apply`，脚本会只生成一份可执行导入脚本，方便你复核后手动执行。
+
+## 仍需人工完成的 Apple 步骤
+
+以下动作仍然必须你自己在 Apple 后台点击完成，无法在本仓库内全自动完成：
+
+1. 在 Apple Developer 中上传 CSR 申请 `Developer ID Application` 证书
+2. 下载 Apple 返回的证书文件
+3. 在 App Store Connect 中创建 API Key 并下载 `.p8`
+
 ## 当前发布策略
 
 `release` workflow 已启用正式分发保护：

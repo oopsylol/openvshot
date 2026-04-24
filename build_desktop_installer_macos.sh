@@ -174,6 +174,12 @@ if [[ "$DIRECT_DISTRIBUTION" == "1" ]]; then
   if [[ -z "$ZIP_FILE" ]]; then
     fail "Direct macOS distribution requires a ZIP artifact."
   fi
+  if [[ -z "$DMG_FILE" ]]; then
+    fail "Direct macOS distribution requires a DMG artifact."
+  fi
+  echo
+  echo "Direct distribution DMG:"
+  echo "  $DMG_FILE"
   echo
   echo "Direct distribution ZIP:"
   echo "  $ZIP_FILE"

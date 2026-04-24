@@ -102,6 +102,7 @@ jobs:
         with:
           name: beta-macos
           path: |
+            apps/desktop/release/*.dmg
             apps/desktop/release/*.zip
             release/openvshot-macos-direct-support.zip
             release/openvshot-cli-macos-*

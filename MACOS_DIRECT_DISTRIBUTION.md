@@ -8,10 +8,11 @@
 
 macOS 发布任务会生成以下文件：
 
-1. `OpenVshot-<version>-<arch>.zip`
-2. `openvshot-macos-direct-support.zip`
-3. `openvshot-cli-macos-<arch>`
-4. `openvshot-cli-macos-<arch>.tar.gz`
+1. `OpenVshot-<version>-<arch>.dmg`
+2. `OpenVshot-<version>-<arch>.zip`
+3. `openvshot-macos-direct-support.zip`
+4. `openvshot-cli-macos-<arch>`
+5. `openvshot-cli-macos-<arch>.tar.gz`
 
 其中 `openvshot-macos-direct-support.zip` 包含：
 
@@ -20,9 +21,9 @@ macOS 发布任务会生成以下文件：
 
 ## 用户安装步骤
 
-1. 从 `GitHub Release` 下载 `OpenVshot` 的 macOS zip 包
-2. 解压得到 `OpenVshot.app`
-3. 将 `OpenVshot.app` 移动到 `/Applications`
+1. 优先从 `GitHub Release` 下载 `OpenVshot` 的 macOS `dmg`
+2. 挂载后将 `OpenVshot.app` 拖到 `/Applications`
+3. 如果 `dmg` 挂载或复制不顺利，再改用 macOS `zip`
 4. 解压 `openvshot-macos-direct-support.zip`
 5. 双击运行 `OpenVshot-First-Run.command`
 
@@ -38,9 +39,9 @@ open /Applications/OpenVshot.app
 ## 当前分发策略
 
 1. `GitHub Actions` 不再依赖 Apple Secrets
-2. macOS 构建默认生成 zip 直发包
+2. macOS 构建默认生成 `dmg + zip` 直发包
 3. Release 中附带首次运行放行脚本
-4. 不再尝试产出需要 Apple 公证的 DMG
+4. `dmg` 仅作为开源软件分发介质，不包含 Apple 公证
 
 ## 适用场景
 

@@ -58,7 +58,7 @@ const config = {
   },
   mac: {
     icon: "build/icon.icns",
-    target: isDirectMacDistribution ? ["zip"] : ["dmg", "zip"],
+    target: ["dmg", "zip"],
     category: "public.app-category.video",
     minimumSystemVersion: "11.0",
     hardenedRuntime: shouldSignMac,
